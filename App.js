@@ -7,11 +7,13 @@ import {
    LocationAccuracy
 } from 'expo-location';
 import MapView, {Marker} from 'react-native-maps';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function App() {
 
   const [location, setLocation] = useState(null);
+
+  const mapRef = useRef(null);
 
   async function requestLocationPermissions(){
     const { granted } = await requestForegroundPermissionsAsync();
@@ -26,6 +28,7 @@ export default function App() {
     requestLocationPermissions();
   },[]);
 
+  //atualiza localização e camera para acompanhar o pin
   useEffect(() => {
     watchPositionAsync({
       accuracy: LocationAccuracy.Highest,
@@ -33,8 +36,11 @@ export default function App() {
       distanceInterval: 1
     },
     (response) => {
-      console.log("Nova localização");
       setLocation(response);
+      mapRef.current?.animateCamera({
+        pitch:40,
+        center: response.coords
+      })
     }
     );
   },[]);
@@ -45,6 +51,7 @@ export default function App() {
       {
         location &&
         <MapView
+          ref={mapRef}
           style={styles.map}
           initialRegion={
             {
